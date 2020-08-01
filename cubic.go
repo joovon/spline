@@ -1,6 +1,7 @@
 package spline
 
 import (
+	"math"
 	"github.com/ready-steady/linear/system"
 )
 
@@ -121,6 +122,44 @@ func (s *Cubic) Evaluate(x []float64) []float64 {
 			k += 4
 		}
 	}
+
+	return y
+}
+
+
+
+
+// Returns y = f(x) at arbitrary x, where f(x) has been constructed previously.
+// Note that extrapolation is used if x is outside range of the interpolant.
+//
+func (s *Cubic) EvaluatePoint(x float64) float64 {
+	// Total number of nodes
+	nn := len(s.nodes)
+
+	// Calculate total x interval (xint) and average spacing (delx)	
+	xint := s.nodes[nn - 1] - s.nodes[0]
+	delx := xint/(float64(nn) - 1.0)
+
+	// Define variable here. If defined within if statement, not returned
+	var k int
+	
+	// Test whether point is within range of interpolation. Use end points if
+	// outside of range.
+	// (Note: Is there a better way to do this?)
+	if x < s.nodes[0] {
+		k = 0
+	} else if x > s.nodes[nn-1]{
+		k = nn - 2
+	} else {
+		ktest := math.Floor( (x - s.nodes[0]) / delx )
+		k = int( math.Min( float64(nn) - 2, ktest) )	
+	}
+
+	// Compute delta x - distance between requested point and node
+	dx := x - s.nodes[k]
+
+	// Compute interpolated point	 
+	y := dx*(dx*(dx*s.weights[4*k]+s.weights[4*k+1])+s.weights[4*k+2]) + s.weights[4*k+3]
 
 	return y
 }
